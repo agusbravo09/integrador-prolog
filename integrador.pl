@@ -1,4 +1,5 @@
 :- consult('cargar_datos.pl'). %esto es como importar un modulo en otro lenguaje
+:- consult('consultas.pl').
 
 menu :- write('*** Analisis de Vida Inteligente en varios planetas *** \n'),
         write('1. Cargar datos \n'),
@@ -10,8 +11,8 @@ menu :- write('*** Analisis de Vida Inteligente en varios planetas *** \n'),
 
 
 execute(1) :- cargar_csvs, menu.
-execute(2) :- write('no disponible xd'), nl, menu.
-execute(3) :- write('no disponible xd'), nl, menu.
-execute(4) :- write('saliendo del programa...'), nl, true.
-execute(_) :- write('cacho chistoso sos'), nl, menu.
+execute(2) :- imprimir_planetas, nl, menu.
+execute(3) :- menu2, nl.
+execute(4) :- write('Saliendo del programa...'), nl, true.
+execute(_) :- write('Opcion no valida.'), nl, menu. %en caso de que ninguno coincida...
 
