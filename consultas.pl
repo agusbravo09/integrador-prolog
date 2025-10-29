@@ -32,9 +32,21 @@ consultas(3) :- writeln('*** Planetas con vida inteligente ***'),
                     writeln('No se encontraron planetas con vida inteligente...')),
                 nl, menu2.
                 
-consultas(4) :- write('seleccionaste la consulta 4'), nl, menu2.
-consultas(5) :- write('seleccionaste la consulta 5'), nl, menu2.
-consultas(_) :- write('Volviendo al inicio...'), nl, menu.
+consultas(4) :- writeln('*** Planetas habitables ***'),
+                (inferir(habitable, _) ->
+                    forall(inferir(habitable, Planeta), format('~w~n', [Planeta]))
+                    ;
+                    writeln('No se encontraron planetas que sean habitables...')),
+                nl, menu2.
+                
+consultas(5) :- writeln('*** Planetas con civilizaciones avanzadas ***'),
+                (inferir(civilizacion_avanzada, _) ->
+                    forall(inferir(civilizacion_avanzada, Planeta), format('~w~n', [Planeta]))
+                    ;
+                    writeln('No se encontraron planetas con civilizaciones avanzadas...')),
+                nl, menu2.
+                
+consultas(_) :- write('Volviendo al menu principal...'), nl, menu.
 
 
 menu_explicaciones :-
@@ -46,5 +58,15 @@ menu_explicaciones :-
     write('5. Volver'), nl,
     write('Selecciona una opcion: (1-5): '),
     read(Option), explicaciones(Option).
+
+explicaciones(1) :- ingresar_planeta(Planeta), hola(Planeta).
+explicaciones(2) :- writeln('ni idea ajaj').
+explicaciones(3) :- writeln('ni idea ajaj').
+explicaciones(4) :- writeln('ni idea ajaj').
+explicaciones(5) :- writeln('Volviendo al menu principal... '), menu.
+
+
+
+ingresar_planeta(Planeta) :- writeln('Escriba el nombre del planeta: '), read(Planeta).
 
 
