@@ -1,4 +1,4 @@
-%Reglas de inferencia
+%Reglas
 
 inferir(vida_basica, Planeta) :- vida_basica(Planeta).
 inferir(vida_compleja, Planeta) :- vida_compleja(Planeta).
@@ -25,6 +25,8 @@ habitable(Planeta) :- planeta(Planeta, tiene_atmosfera),
 civilizacion_avanzada(Planeta) :- vida_inteligente(Planeta),
                                   habitable(Planeta),
                                   planeta(Planeta, tiene_luz_solar).
+                                  
+
                                   
 
 
