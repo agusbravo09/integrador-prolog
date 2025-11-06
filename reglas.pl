@@ -27,6 +27,9 @@ civilizacion_avanzada(Planeta) :- vida_inteligente(Planeta),
                                   planeta(Planeta, tiene_luz_solar).
                                   
 
+
+                                  
+
                                   
 
 

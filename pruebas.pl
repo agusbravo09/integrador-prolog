@@ -1,282 +1,241 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%% Archivo de pruebas generado por DeepSeek %%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% Archivo de Pruebas de Robustez (con PL-Unit) Generado por GEMINI %%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-:- consult('cargar_datos.pl').
+% Nos pareció divertido pedirle a una IA que haga tests y trate de romper el programa jaja
+
+
+% --- 1. IMPORTACIONES ---
+% Cargamos las reglas y consultas que vamos a probar
 :- consult('reglas.pl').
 :- consult('consultas.pl').
+:- consult('cargar_datos.pl'). % Lo cargamos por si 'consultas.pl' lo necesita, pero NO usaremos sus datos.
 
-% PRUEBAS DEL SISTEMA DE INFERENCIA
+% Importamos la biblioteca de pruebas unitarias
+:- use_module(library(plunit)).
 
-% Predicado principal para ejecutar todas las pruebas
-ejecutar_pruebas :-
-    writeln('=== INICIANDO PRUEBAS DEL SISTEMA ==='),
-    nl,
-    cargar_planetas,
-    nl,
-    prueba_vida_basica,
-    nl,
-    prueba_vida_compleja,
-    nl,
-    prueba_vida_inteligente,
-    nl,
-    prueba_habitabilidad,
-    nl,
-    prueba_civilizacion_avanzada,
-    nl,
-    prueba_planetas_inexistentes,
-    nl,
-    writeln('=== TODAS LAS PRUEBAS COMPLETADAS ===').
+% --- 2. DATOS DE PRUEBA CONTROLADOS ---
+% Este predicado es la clave de la robustez.
+% Borra todos los hechos antiguos y crea un universo conocido para probar.
+setup_datos_prueba :-
+    % Borra cualquier dato de ejecuciones anteriores o de 'cargar_datos.pl'
+    retractall(planeta(_, _)),
 
-% PRUEBA 1: Vida básica
-prueba_vida_basica :-
-    writeln('--- PRUEBA VIDA BASICA ---'),
+    % CASO 1: Tierra (Pasa todas las reglas)
+    assert(planeta(tierra, tiene_atmosfera)),
+    assert(planeta(tierra, tiene_agua_liquida)),
+    assert(planeta(tierra, tiene_elementos_biogenicos)), % Pasa vida_basica
+    assert(planeta(tierra, tiene_evolucion_biologica)),
+    assert(planeta(tierra, tiene_superficie_solida)), % Pasa vida_compleja
+    assert(planeta(tierra, tiene_tecnologia)), % Pasa vida_inteligente
+    assert(planeta(tierra, tiene_magnetosfera)),
+    assert(planeta(tierra, tiene_gravedad_estable)),
+    assert(planeta(tierra, tiene_ciclo_dia_noche)), % Pasa habitable
+    assert(planeta(tierra, tiene_luz_solar)), % Pasa civilizacion_avanzada
 
-    % Planeta que SÍ tiene vida básica
-    writeln('1. Planetas que DEBERIAN tener vida basica:'),
-    (vida_basica(tierra) ->
-        writeln('? TIERRA: CORRECTO - tiene vida basica')
-    ;
-        writeln('? TIERRA: ERROR - deberia tener vida basica')
-    ),
-    (vida_basica(kepler452b) ->
-        writeln('? KEPLER452B: CORRECTO - tiene vida basica')
-    ;
-        writeln('? KEPLER452B: ERROR - deberia tener vida basica')
-    ),
+    % CASO 2: Pandora (Pasa vida_basica, pero falla vida_compleja)
+    assert(planeta(pandora, tiene_atmosfera)),
+    assert(planeta(pandora, tiene_agua_liquida)),
+    assert(planeta(pandora, tiene_elementos_biogenicos)), % Pasa vida_basica
+    assert(planeta(pandora, tiene_superficie_solida)),
+    % FALTA: tiene_evolucion_biologica -> Falla vida_compleja
 
-    nl,
-    writeln('2. Planetas que NO DEBERIAN tener vida basica:'),
-    (\+ vida_basica(marte) ->
-        writeln('? MARTE: CORRECTO - no tiene vida basica')
-    ;
-        writeln('? MARTE: ERROR - no deberia tener vida basica')
-    ),
-    (\+ vida_basica(venus) ->
-        writeln('? VENUS: CORRECTO - no tiene vida basica')
-    ;
-        writeln('? VENUS: ERROR - no deberia tener vida basica')
-    ),
-    (\+ vida_basica(europa) ->
-        writeln('? EUROPA: CORRECTO - no tiene vida basica')
-    ;
-        writeln('? EUROPA: ERROR - no deberia tener vida basica')
-    ).
+    % CASO 3: Oasis (Pasa habitable, pero falla vida_basica)
+    assert(planeta(oasis, tiene_atmosfera)),
+    % FALTA: tiene_agua_liquida -> Falla vida_basica
+    assert(planeta(oasis, tiene_magnetosfera)),
+    assert(planeta(oasis, tiene_gravedad_estable)),
+    assert(planeta(oasis, tiene_ciclo_dia_noche)), % Pasa habitable
+    assert(planeta(oasis, tiene_luz_solar)),
 
-% PRUEBA 2: Vida compleja
-prueba_vida_compleja :-
-    writeln('--- PRUEBA VIDA COMPLEJA ---'),
+    % CASO 4: TechWorld (Pasa vida_inteligente, pero falla habitable)
+    assert(planeta(tech_world, tiene_atmosfera)),
+    assert(planeta(tech_world, tiene_agua_liquida)),
+    assert(planeta(tech_world, tiene_elementos_biogenicos)), % Pasa vida_basica
+    assert(planeta(tech_world, tiene_evolucion_biologica)),
+    assert(planeta(tech_world, tiene_superficie_solida)), % Pasa vida_compleja
+    assert(planeta(tech_world, tiene_tecnologia)), % Pasa vida_inteligente
+    assert(planeta(tech_world, tiene_luz_solar)),
+    % FALTA: tiene_magnetosfera -> Falla habitable
+    assert(planeta(tech_world, tiene_gravedad_estable)),
+    assert(planeta(tech_world, tiene_ciclo_dia_noche)),
 
-    writeln('1. Planetas que DEBERIAN tener vida compleja:'),
-    (vida_compleja(tierra) ->
-        writeln('? TIERRA: CORRECTO - tiene vida compleja')
-    ;
-        writeln('? TIERRA: ERROR - deberia tener vida compleja')
-    ),
-    (vida_compleja(kepler452b) ->
-        writeln('? KEPLER452B: CORRECTO - tiene vida compleja')
-    ;
-        writeln('? KEPLER452B: ERROR - deberia tener vida compleja')
-    ),
+    % CASO 5: Marte (Falla casi todo)
+    assert(planeta(marte, tiene_atmosfera)),
+    assert(planeta(marte, tiene_superficie_solida)).
+    % Faltan agua, elementos, evolucion, etc.
 
-    nl,
-    writeln('2. Planetas que NO DEBERIAN tener vida compleja:'),
-    (\+ vida_compleja(marte) ->
-        writeln('? MARTE: CORRECTO - no tiene vida compleja')
-    ;
-        writeln('? MARTE: ERROR - no deberia tener vida compleja')
-    ),
-    (\+ vida_compleja(venus) ->
-        writeln('? VENUS: CORRECTO - no tiene vida compleja')
-    ;
-        writeln('? VENUS: ERROR - no deberia tener vida compleja')
-    ),
-    (\+ vida_compleja(europa) ->
-        writeln('? EUROPA: CORRECTO - no tiene vida compleja')
-    ;
-        writeln('? EUROPA: ERROR - no deberia tener vida compleja')
-    ).
 
-% PRUEBA 3: Vida inteligente
-prueba_vida_inteligente :-
-    writeln('--- PRUEBA VIDA INTELIGENTE ---'),
-
-    writeln('1. Planetas que DEBERIAN tener vida inteligente:'),
-    (vida_inteligente(tierra) ->
-        writeln('? TIERRA: CORRECTO - tiene vida inteligente')
-    ;
-        writeln('? TIERRA: ERROR - deberia tener vida inteligente')
-    ),
-    (vida_inteligente(kepler452b) ->
-        writeln('? KEPLER452B: CORRECTO - tiene vida inteligente')
-    ;
-        writeln('? KEPLER452B: ERROR - deberia tener vida inteligente')
-    ),
-
-    nl,
-    writeln('2. Planetas que NO DEBERIAN tener vida inteligente:'),
-    (\+ vida_inteligente(marte) ->
-        writeln('? MARTE: CORRECTO - no tiene vida inteligente')
-    ;
-        writeln('? MARTE: ERROR - no deberia tener vida inteligente')
-    ),
-    (\+ vida_inteligente(venus) ->
-        writeln('? VENUS: CORRECTO - no tiene vida inteligente')
-    ;
-        writeln('? VENUS: ERROR - no deberia tener vida inteligente')
-    ),
-    (\+ vida_inteligente(europa) ->
-        writeln('? EUROPA: CORRECTO - no tiene vida inteligente')
-    ;
-        writeln('? EUROPA: ERROR - no deberia tener vida inteligente')
-    ).
-
-% PRUEBA 4: Habitabilidad
-prueba_habitabilidad :-
-    writeln('--- PRUEBA HABITABILIDAD ---'),
-
-    writeln('1. Planetas que DEBERIAN ser habitables:'),
-    (habitable(tierra) ->
-        writeln('? TIERRA: CORRECTO - es habitable')
-    ;
-        writeln('? TIERRA: ERROR - deberia ser habitable')
-    ),
-    (habitable(kepler452b) ->
-        writeln('? KEPLER452B: CORRECTO - es habitable')
-    ;
-        writeln('? KEPLER452B: ERROR - deberia ser habitable')
-    ),
-    (habitable(venus) ->
-        writeln('? VENUS: CORRECTO - es habitable')
-    ;
-        writeln('? VENUS: ERROR - deberia ser habitable')
-    ),
-
-    nl,
-    writeln('2. Planetas que NO DEBERIAN ser habitables:'),
-    (\+ habitable(marte) ->
-        writeln('? MARTE: CORRECTO - no es habitable')
-    ;
-        writeln('? MARTE: ERROR - no deberia ser habitable')
-    ),
-    (\+ habitable(europa) ->
-        writeln('? EUROPA: CORRECTO - no es habitable')
-    ;
-        writeln('? EUROPA: ERROR - no deberia ser habitable')
-    ).
-
-% PRUEBA 5: Civilización avanzada
-prueba_civilizacion_avanzada :-
-    writeln('--- PRUEBA CIVILIZACION AVANZADA ---'),
-
-    writeln('1. Planetas que DEBERIAN tener civilizacion avanzada:'),
-    (civilizacion_avanzada(tierra) ->
-        writeln('? TIERRA: CORRECTO - tiene civilizacion avanzada')
-    ;
-        writeln('? TIERRA: ERROR - deberia tener civilizacion avanzada')
-    ),
-    (civilizacion_avanzada(kepler452b) ->
-        writeln('? KEPLER452B: CORRECTO - tiene civilizacion avanzada')
-    ;
-        writeln('? KEPLER452B: ERROR - deberia tener civilizacion avanzada')
-    ),
-
-    nl,
-    writeln('2. Planetas que NO DEBERIAN tener civilizacion avanzada:'),
-    (\+ civilizacion_avanzada(marte) ->
-        writeln('? MARTE: CORRECTO - no tiene civilizacion avanzada')
-    ;
-        writeln('? MARTE: ERROR - no deberia tener civilizacion avanzada')
-    ),
-    (\+ civilizacion_avanzada(venus) ->
-        writeln('? VENUS: CORRECTO - no tiene civilizacion avanzada')
-    ;
-        writeln('? VENUS: ERROR - no deberia tener civilizacion avanzada')
-    ),
-    (\+ civilizacion_avanzada(europa) ->
-        writeln('? EUROPA: CORRECTO - no tiene civilizacion avanzada')
-    ;
-        writeln('? EUROPA: ERROR - no deberia tener civilizacion avanzada')
-    ).
-
-% PRUEBA 6: Planetas inexistentes
-prueba_planetas_inexistentes :-
-    writeln('--- PRUEBA PLANETAS INEXISTENTES ---'),
-
-    writeln('Verificando que planetas inexistentes no tengan ninguna condicion:'),
-    (\+ vida_basica(planeta_inexistente) ->
-        writeln('? PLANETA_INEXISTENTE: CORRECTO - no tiene vida basica')
-    ;
-        writeln('? PLANETA_INEXISTENTE: ERROR - no deberia existir')
-    ),
-    (\+ vida_compleja(jupiter) ->
-        writeln('? JUPITER: CORRECTO - no tiene vida compleja')
-    ;
-        writeln('? JUPITER: ERROR - no deberia tener vida compleja')
-    ),
-    (\+ vida_inteligente(saturno) ->
-        writeln('? SATURNO: CORRECTO - no tiene vida inteligente')
-    ;
-        writeln('? SATURNO: ERROR - no deberia tener vida inteligente')
-    ).
-
-% PRUEBA 7: Consultas de inferencia
-prueba_consultas_inferencia :-
-    writeln('--- PRUEBA CONSULTAS DE INFERENCIA ---'),
-
-    writeln('1. Consulta: Planetas con vida basica:'),
-    findall(P, inferir(vida_basica, P), PlanetasBasica),
-    (member(tierra, PlanetasBasica), member(kepler452b, PlanetasBasica) ->
-        writeln('? CORRECTO: Tierra y Kepler452b encontrados')
-    ;
-        writeln('? ERROR: No se encontraron los planetas correctos')
-    ),
-
-    writeln('2. Consulta: Planetas con vida inteligente:'),
-    findall(P, inferir(vida_inteligente, P), PlanetasInteligente),
-    (member(tierra, PlanetasInteligente), member(kepler452b, PlanetasInteligente) ->
-        writeln('? CORRECTO: Tierra y Kepler452b encontrados')
-    ;
-        writeln('? ERROR: No se encontraron los planetas correctos')
-    ).
-
-% PRUEBA 8: Sistema de explicaciones
-prueba_explicaciones :-
-    writeln('--- PRUEBA SISTEMA DE EXPLICACIONES ---'),
-
-    writeln('1. Probando explicacion de vida basica en Tierra:'),
-    por_que(vida_basica, tierra, _),
-
-    nl,
-    writeln('2. Probando explicacion de vida basica en Marte:'),
-    por_que(vida_basica, marte, _),
-
-    nl,
-    writeln('3. Probando explicacion de vida inteligente en Kepler452b:'),
-    por_que(vida_inteligente, kepler452b, _).
-
-% Menú de pruebas
+% --- 3. MENU DE PRUEBAS (Compatible con integrador.pl) ---
 menu_pruebas :-
-    writeln('*** MENU DE PRUEBAS ***'),
-    writeln('1. Ejecutar todas las pruebas'),
-    writeln('2. Prueba de vida basica'),
-    writeln('3. Prueba de vida compleja'),
-    writeln('4. Prueba de vida inteligente'),
-    writeln('5. Prueba de habitabilidad'),
-    writeln('6. Prueba de civilizacion avanzada'),
-    writeln('7. Prueba de consultas de inferencia'),
-    writeln('8. Prueba de explicaciones'),
-    writeln('9. Volver al menu principal'),
-    write('Selecciona una opcion (1-9): '),
+    writeln('*** MENU DE PRUEBAS DE ROBUSTEZ (PL-Unit) ***'),
+    writeln('1. Ejecutar todas las pruebas automaticas'),
+    writeln('2. Ejecutar pruebas visuales del sistema de explicacion'),
+    writeln('3. Volver al menu principal'),
+    write('Selecciona una opcion (1-3): '),
     read(Opcion), ejecutar_opcion_prueba(Opcion).
 
-ejecutar_opcion_prueba(1) :- ejecutar_pruebas.
-ejecutar_opcion_prueba(2) :- cargar_planetas, prueba_vida_basica.
-ejecutar_opcion_prueba(3) :- cargar_planetas, prueba_vida_compleja.
-ejecutar_opcion_prueba(4) :- cargar_planetas, prueba_vida_inteligente.
-ejecutar_opcion_prueba(5) :- cargar_planetas, prueba_habitabilidad.
-ejecutar_opcion_prueba(6) :- cargar_planetas, prueba_civilizacion_avanzada.
-ejecutar_opcion_prueba(7) :- cargar_planetas, prueba_consultas_inferencia.
-ejecutar_opcion_prueba(8) :- cargar_planetas, prueba_explicaciones.
-ejecutar_opcion_prueba(9) :- menu.
-ejecutar_opcion_prueba(_) :- writeln('Opcion no valida'), menu_pruebas.
+ejecutar_opcion_prueba(1) :-
+    writeln('--- Ejecutando Pruebas de Reglas e Inferencia ---'),
+    % Ejecuta todos los bloques de 'begin_tests' EXCEPTO el de 'explicaciones'
+    run_tests([ reglas_vida_basica,
+                reglas_vida_compleja,
+                reglas_habitable,
+                reglas_civilizacion_avanzada,
+                consultas_inferir,
+                robustez_datos_vacios
+              ]),
+    writeln('--- Pruebas Automaticas Finalizadas ---'), nl,
+    menu_pruebas.
+
+ejecutar_opcion_prueba(2) :-
+    writeln('--- Ejecutando Pruebas Visuales de Explicacion ---'),
+    writeln('Por favor, verifique la salida en la consola.'),
+    ejecutar_pruebas_visuales,
+    writeln('--- Pruebas Visuales Finalizadas ---'), nl,
+    menu_pruebas.
+
+ejecutar_opcion_prueba(3) :- integrador:menu.
+ejecutar_opcion_prueba(_) :- writeln('Opcion no valida'), nl, menu_pruebas.
+
+
+% --- 4. SUITE DE PRUEBAS AUTOMATICAS ---
+
+% [setup(setup_datos_prueba)] le dice a plunit que ejecute ese predicado
+% ANTES de correr los tests de este bloque.
+
+:- begin_tests(reglas_vida_basica, [setup(setup_datos_prueba)]).
+
+test(tierra_pasa_vida_basica) :-
+    vida_basica(tierra).
+test(pandora_pasa_vida_basica) :-
+    vida_basica(pandora).
+test(tech_world_pasa_vida_basica) :-
+    vida_basica(tech_world).
+test(marte_falla_vida_basica, [fail]) :-
+    vida_basica(marte). % Falla, no tiene agua ni elementos
+test(oasis_falla_vida_basica, [fail]) :-
+    vida_basica(oasis). % Falla, no tiene agua
+test(inexistente_falla_vida_basica, [fail]) :-
+    vida_basica(planeta_inexistente).
+
+:- end_tests(reglas_vida_basica).
+
+
+:- begin_tests(reglas_vida_compleja, [setup(setup_datos_prueba)]).
+
+test(tierra_pasa_vida_compleja) :-
+    vida_compleja(tierra).
+test(tech_world_pasa_vida_compleja) :-
+    vida_compleja(tech_world).
+test(pandora_falla_vida_compleja, [fail]) :-
+    vida_compleja(pandora). % Pasa vida_basica, pero falla aqui (falta evolucion)
+test(marte_falla_vida_compleja, [fail]) :-
+    vida_compleja(marte). % Falla en el primer paso (vida_basica)
+
+:- end_tests(reglas_vida_compleja).
+
+
+:- begin_tests(reglas_habitable, [setup(setup_datos_prueba)]).
+
+test(tierra_pasa_habitable) :-
+    habitable(tierra).
+test(oasis_pasa_habitable) :-
+    habitable(oasis). % Es habitable, aunque no tenga vida
+test(tech_world_falla_habitable, [fail]) :-
+    habitable(tech_world). % Falla, falta magnetosfera
+test(marte_falla_habitable, [fail]) :-
+    habitable(marte). % Falla, falta magnetosfera, gravedad, ciclo
+test(pandora_falla_habitable, [fail]) :-
+    habitable(pandora). % Falla, no tiene nada de habitabilidad
+
+:- end_tests(reglas_habitable).
+
+
+% Prueba clave de robustez: dependencias cruzadas
+:- begin_tests(reglas_civilizacion_avanzada, [setup(setup_datos_prueba)]).
+
+test(tierra_pasa_civilizacion_avanzada) :-
+    civilizacion_avanzada(tierra). % Pasa vida_inteligente Y habitable
+
+test(oasis_falla_civilizacion_avanzada, [fail]) :-
+    civilizacion_avanzada(oasis). % Pasa habitable, pero Falla vida_inteligente
+
+test(tech_world_falla_civilizacion_avanzada, [fail]) :-
+    civilizacion_avanzada(tech_world). % Pasa vida_inteligente, pero Falla habitable
+
+test(pandora_falla_civilizacion_avanzada, [fail]) :-
+    civilizacion_avanzada(pandora). % Falla vida_inteligente Y habitable
+
+:- end_tests(reglas_civilizacion_avanzada).
+
+
+% Pruebas del predicado 'inferir' y 'findall'
+:- begin_tests(consultas_inferir, [setup(setup_datos_prueba)]).
+
+test(inferir_vida_basica_encuentra_correctos) :-
+    findall(P, inferir(vida_basica, P), Planetas),
+    sort(Planetas, PlanetasOrdenados), % sort para orden canonico
+    PlanetasOrdenados == [pandora, tech_world, tierra].
+
+test(inferir_vida_compleja_encuentra_correctos) :-
+    findall(P, inferir(vida_compleja, P), Planetas),
+    sort(Planetas, PlanetasOrdenados),
+    PlanetasOrdenados == [tech_world, tierra].
+
+test(inferir_civilizacion_avanzada_encuentra_correctos) :-
+    findall(P, inferir(civilizacion_avanzada, P), Planetas),
+    Planetas == [tierra]. % Solo tierra deberia estar
+
+:- end_tests(consultas_inferir).
+
+
+% Prueba de robustez: ¿Qué pasa si la base de datos está vacía?
+
+setup_datos_vacios :-
+    retractall(planeta(_,_)).
+
+:- begin_tests(robustez_datos_vacios, [setup(setup_datos_vacios)]).
+
+test(inferir_con_base_vacia, [true(Planetas == [])]) :-
+    findall(P, inferir(vida_basica, P), Planetas). % Deberia devolver lista vacia
+
+test(regla_con_base_vacia, [fail]) :-
+    vida_basica(tierra). % Deberia fallar si no hay hechos
+
+:- end_tests(robustez_datos_vacios).
+
+
+% --- 5. SUITE DE PRUEBAS VISUALES (EXPLICACION) ---
+% Estas pruebas no fallan (a menos que haya un error de Prolog).
+% Su proposito es ejecutar el sistema de explicacion para que
+% puedas verificar visualmente que la salida es correcta.
+
+ejecutar_pruebas_visuales :-
+    writeln('--- Ejecutando Pruebas Visuales de Explicacion ---'),
+    writeln('Por favor, verifique la salida en la consola.'), nl,
+
+    % MUY IMPORTANTE: Preparamos los datos
+    setup_datos_prueba,
+
+    nl, writeln('--- PRUEBA VISUAL: civilizacion_avanzada(tierra) -> DEBE PASAR ---'),
+    por_que(civilizacion_avanzada, tierra, _),
+    writeln('--- FIN PRUEBA VISUAL ---'),
+
+    nl, writeln('--- PRUEBA VISUAL: civilizacion_avanzada(tech_world) -> DEBE FALLAR (por habitable) ---'),
+    por_que(civilizacion_avanzada, tech_world, _),
+    writeln('--- FIN PRUEBA VISUAL ---'),
+
+    nl, writeln('--- PRUEBA VISUAL: civilizacion_avanzada(oasis) -> DEBE FALLAR (por vida_inteligente) ---'),
+    por_que(civilizacion_avanzada, oasis, _),
+    writeln('--- FIN PRUEBA VISUAL ---'),
+
+    nl, writeln('--- PRUEBA VISUAL: vida_basica(marte) -> DEBE FALLAR (base) ---'),
+    por_que(vida_basica, marte, _),
+    writeln('--- FIN PRUEBA VISUAL ---'),
+
+    nl, writeln('--- PRUEBA VISUAL: vida_basica(inexistente) -> DEBE FALLAR (base) ---'),
+    por_que(vida_basica, inexistente, _),
+    writeln('--- FIN PRUEBA VISUAL ---'),
+
+    writeln('--- Pruebas Visuales Finalizadas ---'), nl.

@@ -64,11 +64,6 @@ menu_explicaciones :-
     write('Selecciona una opcion: (1-6): '),
     read(Option), ejecutar_explicacion(Option).
 
-explicaciones(1) :- ingresar_planeta(Planeta), por_que(vida_basica, Planeta, _Explicacion).
-explicaciones(2) :- ingresar_planeta(Planeta), por_que(vida_compleja, Planeta, _Explicacion).
-explicaciones(3) :- ingresar_planeta(Planeta), por_que(vida_inteligente, Planeta, _Explicacion).
-explicaciones(4) :- ingresar_planeta(Planeta), por_que(habitable, Planeta, _Explicacion).
-explicaciones(5) :- ingresar_planeta(Planeta), por_que(civilizacion_avanzada, Planeta, _Explicacion).
 explicaciones(6) :- writeln('Volviendo al menu principal... '), nl, integrador:menu.
 explicaciones(_) :- writeln('La opcion ingresada no es valida... Pruebe nuevamente'), menu_explicaciones.
 
@@ -82,181 +77,119 @@ ejecutar_explicacion(Opcion) :-
      Opcion = 4 -> Condicion = habitable;
      Opcion = 5 -> Condicion = civilizacion_avanzada),
 
-    % *** Se llama al predicado que desea usar ***
-    writeln('--- Explicacion Simplificada (por_que/3) ---'),
-    por_que(Condicion, Planeta, _),
-
-    nl,
-    writeln('--- Explicacion Detallada (demostrar/2) ---'),
-    demostrar(Condicion, Planeta), % Llamada a la nueva demostracion recursiva
+     % llamada a por_que/3 (recursivo)
+     por_que(Condicion, Planeta, _),
 
     nl,
     menu_explicaciones.
+ejecutar_explicacion(6) :- writeln('Volviendo al menu principal... '), nl, menu.
 ejecutar_explicacion(_) :- write('Opcion no valida. Intente de nuevo.'), nl, menu_explicaciones.
 
 % Explicaciones
 
-% hago uso de If-Else
-% la estructura es asi (Condicion -> true ; false)
-% =========================================================
-% PREDICADOS DE EXPLICACIÓN SIMPLIFICADA (por_que/3)
-% =========================================================
+% ---
+% PASO 1: DEFINIMOS LAS REGLAS COMO DATOS (HECHOS)
+%
+% Formato:
+%   hecho(NombreHecho) -> Representa un 'planeta(Planeta, NombreHecho)'
+%   regla(NombreRegla) -> Representa una sub-regla que hay que explicar
+% ---
+componentes_regla(vida_basica, [hecho(tiene_atmosfera),
+                                hecho(tiene_agua_liquida),
+                                hecho(tiene_elementos_biogenicos)]).
 
-% Predicados para la explicación simplificada que verifica las sub-condiciones directas.
+componentes_regla(vida_compleja, [regla(vida_basica),
+                                  hecho(tiene_evolucion_biologica),
+                                  hecho(tiene_superficie_solida)]).
 
-por_que(vida_basica, Planeta, Explicacion) :-
-    writeln('*** ANALIZANDO VIDA BASICA ***'),
-    (vida_basica(Planeta) ->
-        writeln('El planeta TIENE vida basica porque:'),
-        tiene_hecho(Planeta, tiene_atmosfera),
-        tiene_hecho(Planeta, tiene_agua_liquida),
-        tiene_hecho(Planeta, tiene_elementos_biogenicos),
-        Explicacion = 'El planeta tiene vida basica'
+componentes_regla(vida_inteligente, [regla(vida_compleja),
+                                     hecho(tiene_tecnologia)]).
+
+componentes_regla(habitable, [hecho(tiene_atmosfera),
+                             hecho(tiene_magnetosfera),
+                             hecho(tiene_gravedad_estable),
+                             hecho(tiene_ciclo_dia_noche)]).
+
+componentes_regla(civilizacion_avanzada, [regla(vida_inteligente),
+                                          regla(habitable),
+                                          hecho(tiene_luz_solar)]).
+
+
+% ---
+% PASO 2: PUNTO DE ENTRADA
+% Este predicado sigue siendo el mismo. Llama a la regla real,
+% informa el resultado (SI/NO) y luego llama al explicador.
+% ---
+por_que(Regla, Planeta, Explicacion) :-
+    Goal =.. [Regla, Planeta],
+
+    writeln('--- INICIO DE EXPLICACION ---'),
+    format('Analizando ~w en ~w...~n~n', [Regla, Planeta]),
+
+    (   call(Goal) -> % Intenta probar la regla original de reglas.pl
+        format('RESULTADO: El planeta ~w CUMPLE con la regla ~w.~n', [Planeta, Regla]),
+        writeln('Verificando condiciones: '),
+        explicar_condiciones(Regla, Planeta), % Llama al explicador generico
+        Explicacion = 'Regla cumplida.'
     ;
-        writeln('El planeta NO tiene vida basica porque:'),
-        tiene_hecho(Planeta, tiene_atmosfera),
-        tiene_hecho(Planeta, tiene_agua_liquida),
-        tiene_hecho(Planeta, tiene_elementos_biogenicos),
-        Explicacion = 'El planeta no tiene vida basica'
-    ).
-    
-por_que(vida_compleja, Planeta, Explicacion) :-
-    writeln('*** ANALIZANDO VIDA COMPLEJA ***'),
-    (vida_compleja(Planeta) ->
-        writeln('El planeta TIENE vida compleja porque:'),
-        por_que_simplificado(vida_basica, Planeta),
-        tiene_hecho(Planeta, tiene_evolucion_biologica),
-        tiene_hecho(Planeta, tiene_superficie_solida),
-        Explicacion = 'El planeta tiene vida compleja'
+        format('RESULTADO: El planeta ~w NO CUMPLE con la regla ~w.~n', [Planeta, Regla]),
+        writeln('Verificando condiciones:'),
+        explicar_condiciones(Regla, Planeta), % Llama al explicador generico
+        Explicacion = 'Regla no cumplida.'
+    ),
+    writeln('--- FIN DE EXPLICACION ---').
+
+
+% ---
+% PASO 3: EL EXPLICADOR GENERICO
+% ---
+explicar_condiciones(Regla, Planeta) :-
+    format('  Evaluando regla: ~w~n', [Regla]),
+
+    % 1. Busca la definicion de la regla
+    (   componentes_regla(Regla, Componentes) ->
+
+        % 2. Itera sobre cada componente de la lista
+        forall(member(Componente, Componentes),
+               verificar_componente(Planeta, Componente))
     ;
-        writeln('El planeta NO tiene vida compleja porque:'),
-        por_que_simplificado(vida_basica, Planeta),
-        tiene_hecho(Planeta, tiene_evolucion_biologica),
-        tiene_hecho(Planeta, tiene_superficie_solida),
-        Explicacion = 'El planeta no tiene vida compleja'
+        % Caso de seguridad: si una regla no esta definida aqui
+        format('  ERROR: No se encontro definicion de explicacion para ~w~n', [Regla])
     ).
-    
-por_que(vida_inteligente, Planeta, Explicacion) :-
-    writeln('*** ANALIZANDO VIDA INTELIGENTE ***'),
-    (vida_inteligente(Planeta) ->
-        writeln('El planeta TIENE vida inteligente porque:'),
-        por_que_simplificado(vida_compleja, Planeta),
-        tiene_hecho(Planeta, tiene_tecnologia),
-        Explicacion = 'El planeta tiene vida inteligente'
+
+
+% ---
+% PASO 4: EL VERIFICADOR DE COMPONENTES
+% Este predicado es llamado por 'forall' para cada item de la lista.
+% ---
+
+% Caso 1: El componente es una 'regla(...)'
+verificar_componente(Planeta, regla(SubRegla)) :-
+    format('  -> Verificando sub-regla: ~w...~n', [SubRegla]),
+    explicar_condiciones(SubRegla, Planeta).
+
+% Caso 2: El componente es un 'hecho(...)' (CASO BASE)
+verificar_componente(Planeta, hecho(Hecho)) :-
+    verificar_hecho(Planeta, Hecho).
+
+
+% ---
+% PASO 5: EL VERIFICADOR DE HECHOS
+% Este no cambia.
+% ---
+verificar_hecho(Planeta, Hecho) :-
+    (   planeta(Planeta, Hecho) ->
+        format('      [SI] - Tiene ~w~n', [Hecho])
     ;
-        writeln('El planeta NO tiene vida inteligente porque:'),
-        por_que_simplificado(vida_compleja, Planeta),
-        tiene_hecho(Planeta, tiene_tecnologia),
-        Explicacion = 'El planeta no tiene vida inteligente'
-    ).
-    
-por_que(habitable, Planeta, Explicacion) :-
-    writeln('*** ANALIZANDO HABITABILIDAD ***'),
-    (habitable(Planeta) ->
-        writeln('El planeta es habitable porque:'),
-        tiene_hecho(Planeta, tiene_atmosfera),
-        tiene_hecho(Planeta, tiene_magnetosfera),
-        tiene_hecho(Planeta, tiene_gravedad_estable),
-        tiene_hecho(Planeta, tiene_ciclo_dia_noche),
-        Explicacion = 'El planeta es habitable'
-    ;
-        writeln('El planeta NO es habitable porque:'),
-        tiene_hecho(Planeta, tiene_atmosfera),
-        tiene_hecho(Planeta, tiene_magnetosfera),
-        tiene_hecho(Planeta, tiene_gravedad_estable),
-        tiene_hecho(Planeta, tiene_ciclo_dia_noche),
-        Explicacion = 'El planeta no es habitable'
-    ).
-    
-por_que(civilizacion_avanzada, Planeta, Explicacion) :-
-    writeln('*** ANALIZANDO CIVILIZACION AVANZADA ***'),
-    (civilizacion_avanzada(Planeta) ->
-        writeln('El planeta TIENE una civlizacion avanzada porque:'),
-        por_que_simplificado(vida_inteligente, Planeta),
-        por_que_simplificado(habitable, Planeta),
-        tiene_hecho(Planeta, tiene_luz_solar),
-        Explicacion = 'El planeta tiene una civilizacion avanzada'
-    ;
-        writeln('El planeta NO tiene una civilizacion avanzada porque:'),
-        por_que_simplificado(vida_inteligente, Planeta),
-        por_que_simplificado(habitable, Planeta),
-        tiene_hecho(Planeta, tiene_luz_solar),
-        Explicacion = 'El planeta no tiene una civilizacion avanzada'
+        format('      [NO] - FALTA ~w~n', [Hecho])
     ).
 
-% Predicado auxiliar: Imprime si un hecho está presente o ausente.
-tiene_hecho(Planeta, Hecho) :-
-    (planeta(Planeta, Hecho) ->
-        format('Tiene ~w~n', [Hecho])
-    ;
-        format('No tiene ~w~n', [Hecho])
-    ).
 
-% Predicados auxiliares: Imprime si la condición de vida simplificada es True/False.
-por_que_simplificado(Condicion, Planeta) :-
-    (call(Condicion, Planeta) ->
-     format('Cumple con ~w~n', [Condicion])
-     ;
-     format('No cumple con ~w~n', [Condicion])
-    ).
-    
-% =========================================================
-% PREDICADOS DE DEMOSTRACIÓN RECURSIVA (demostrar/2)
-% =========================================================
-% 1. Punto de entrada: Verifica la inferencia e inicia la traza.
-demostrar(Condicion, Planeta) :-
-    Goal =.. [Condicion, Planeta],
 
-    (call(Goal) ->
-        writeln('*** La condicion es VERDADERA. Traza: ***'),
-        demostrar_recursivo(Condicion, Planeta)
-    ;
-        writeln('*** La condicion es FALSA. No hay traza de éxito. ***')
-    ).
 
-% 2. Predicado de Caso Base: Imprime los hechos que provienen del CSV.
-demostrar_hecho(Planeta, Hecho) :-
-    planeta(Planeta, Hecho),
-    format('  Hecho_Base: ~w~n', [Hecho]).
 
-% 3. Casos Recursivos: Define el flujo de la inferencia para cada regla compleja.
 
-% Caso: Civilización Avanzada
-demostrar_recursivo(civilizacion_avanzada, Planeta) :-
-    civilizacion_avanzada(Planeta),
-    format('Inferido: ~w~n', [civilizacion_avanzada]),
-    demostrar_recursivo(vida_inteligente, Planeta),
-    demostrar_recursivo(habitable, Planeta),
-    demostrar_hecho(Planeta, tiene_luz_solar).
 
-% Caso: Vida Inteligente
-demostrar_recursivo(vida_inteligente, Planeta) :-
-    vida_inteligente(Planeta),
-    format('Inferido: ~w~n', [vida_inteligente]),
-    demostrar_recursivo(vida_compleja, Planeta),
-    demostrar_hecho(Planeta, tiene_tecnologia).
 
-% Caso: Vida Compleja
-demostrar_recursivo(vida_compleja, Planeta) :-
-    vida_compleja(Planeta),
-    format('Inferido: ~w~n', [vida_compleja]),
-    demostrar_recursivo(vida_basica, Planeta),
-    demostrar_hecho(Planeta, tiene_evolucion_biologica),
-    demostrar_hecho(Planeta, tiene_superficie_solida).
 
-% Caso: Vida Básica (último paso antes de hechos base)
-demostrar_recursivo(vida_basica, Planeta) :-
-    vida_basica(Planeta),
-    format('Inferido: ~w~n', [vida_basica]),
-    demostrar_hecho(Planeta, tiene_atmosfera),
-    demostrar_hecho(Planeta, tiene_agua_liquida),
-    demostrar_hecho(Planeta, tiene_elementos_biogenicos).
 
-% Caso: Habitable
-demostrar_recursivo(habitable, Planeta) :-
-    habitable(Planeta),
-    format('Inferido: ~w~n', [habitable]),
-    demostrar_hecho(Planeta, tiene_atmosfera),
-    demostrar_hecho(Planeta, tiene_magnetosfera),
-    demostrar_hecho(Planeta, tiene_gravedad_estable),
-    demostrar_hecho(Planeta, tiene_ciclo_dia_noche).
