@@ -20,5 +20,5 @@ execute(3) :- menu2, nl.
 execute(4) :- menu_explicaciones, nl.
 execute(5) :- menu_pruebas, nl.
 execute(6) :- write('Saliendo del programa...'), nl, true. % Cambiar el número de salida
-execute(_) :- write('La opcion ingresada no es valida... Pruebe nuevamente'), nl, menu. %en caso de que ninguno coincida...
+execute(_) :- write('Opcion no valida. Intente de nuevo.'), nl, nl, menu. %en caso de que ninguno coincida...
 
