@@ -1,6 +1,6 @@
-% =========================================================
-% MENU DE CONSULTAS (Punto 3 en Menu Principal)
-% =========================================================
+% ===========================
+% ==== MENU DE CONSULTAS ====
+% ===========================
 menu2 :- write('*** Menu de Consultas ***'), nl,
          write('1. Planetas con vida basica.'), nl,
          write('2. Planetas con vida compleja.'), nl,
@@ -24,7 +24,7 @@ ejecutar_consulta(Opcion) :- Opcion >= 1, Opcion =< 6,
                               (inferir(Regla, _) ->
                                  forall(inferir(Regla, Planeta), format('~w~n', [Planeta]))
                                  ;
-                                 writeln('No se encontraron planetas que sean habitables...')),
+                                 writeln('No se encontraron planetas que cumplan con esa condicion...')),
                               
                               nl,
                               menu2.
@@ -32,10 +32,9 @@ ejecutar_consulta(Opcion) :- Opcion >= 1, Opcion =< 6,
 ejecutar_consulta(7) :- write('Volviendo al menu principal...'), nl, nl, menu.
 ejecutar_consulta(_) :- writeln('Opcion no valida. Intente de nuevo.'), nl, nl, menu2.
 
-
-% =========================================================
-% MENU DE EXPLICACIONES (Punto 4 en Menu Principal)
-% =========================================================
+% =================================
+% ====  MENU DE EXPLICACIONES  ====
+% =================================
 menu_explicaciones :-
     write('*** Menu de Explicaciones ***'), nl,
     write('1. Explicar vida basica de un planeta'), nl,
@@ -52,15 +51,16 @@ ejecutar_explicacion(Opcion) :-
     Opcion >= 1, Opcion =< 6,
     write('Ingrese el nombre del planeta (ej: tierra.): '),
     read(Planeta),
-    (Opcion = 1 -> Condicion = vida_basica;
-     Opcion = 2 -> Condicion = vida_compleja;
-     Opcion = 3 -> Condicion = vida_inteligente;
-     Opcion = 4 -> Condicion = habitable;
-     Opcion = 5 -> Condicion = fotosintesis_posible;
-     Opcion = 6 -> Condicion = civilizacion_avanzada),
+    %convertimos el numero en el nombre de la regla que vamos a explicar
+    (Opcion = 1 -> Regla = vida_basica;
+     Opcion = 2 -> Regla = vida_compleja;
+     Opcion = 3 -> Regla = vida_inteligente;
+     Opcion = 4 -> Regla = habitable;
+     Opcion = 5 -> Regla = fotosintesis_posible;
+     Opcion = 6 -> Regla = civilizacion_avanzada),
 
      % llamada a por_que/3 (recursivo)
-     por_que(Condicion, Planeta, _),
+     por_que(Regla, Planeta, _),
 
     nl,
     menu_explicaciones.
@@ -70,12 +70,12 @@ ejecutar_explicacion(_) :- write('Opcion no valida. Intente de nuevo.'), nl, nl,
 % Explicaciones
 
 % ---
-% PASO 1: DEFINIMOS LAS REGLAS COMO DATOS (HECHOS)
-%
 % Formato:
-%   hecho(NombreHecho) -> Representa un 'planeta(Planeta, NombreHecho)'
-%   regla(NombreRegla) -> Representa una sub-regla que hay que explicar
+%   hecho(algo) -> Significa que debemos buscar un hecho: planeta(Planeta, algo)
+%   regla(otra_regla) -> Significa que esto depende de OTRA regla (es recursivo)
 % ---
+
+% Son como "mapas" de las reglas definidas en reglas.pl
 componentes_regla(vida_basica, [hecho(tiene_atmosfera),
                                 hecho(tiene_agua_liquida),
                                 hecho(tiene_elementos_biogenicos)]).
@@ -101,71 +101,79 @@ componentes_regla(civilizacion_avanzada, [regla(vida_inteligente),
 
 
 % ---
-% PASO 2: PUNTO DE ENTRADA
-% Este predicado sigue siendo el mismo. Llama a la regla real,
-% informa el resultado (SI/NO) y luego llama al explicador.
+% Paso 1:
+% Recibe la Regla a explicar y el Planeta.
 % ---
 por_que(Regla, Planeta, Explicacion) :-
+    % Construye la consulta real, el =.. es para armar una regla a partir de una lista ej: vida_basica(tierra)
     Goal =.. [Regla, Planeta],
 
     writeln('--- INICIO DE EXPLICACION ---'),
     format('Analizando ~w en ~w...~n~n', [Regla, Planeta]),
-
-    (   call(Goal) -> % Intenta probar la regla original de reglas.pl
+        % Intenta ejecutar la regla con call
+    (   call(Goal) ->
+        % si tuvo exito
         format('RESULTADO: El planeta ~w CUMPLE con la regla ~w.~n', [Planeta, Regla]),
         writeln('Verificando condiciones: '),
-        explicar_condiciones(Regla, Planeta), % Llama al explicador generico
+        explicar_condiciones(Regla, Planeta), % Llama al explicador recursivo (paso 2)
         Explicacion = 'Regla cumplida.'
     ;
+        % si fallo
         format('RESULTADO: El planeta ~w NO CUMPLE con la regla ~w.~n', [Planeta, Regla]),
         writeln('Verificando condiciones:'),
-        explicar_condiciones(Regla, Planeta), % Llama al explicador generico
+        explicar_condiciones(Regla, Planeta), % Llama al explicador recursivo (paso 2)
         Explicacion = 'Regla no cumplida.'
     ),
     writeln('--- FIN DE EXPLICACION ---').
 
 
 % ---
-% PASO 3: EL EXPLICADOR GENERICO
+% Paso 2:
+% Este predicado toma la regla y busca el "mapa" para revisar cada parte
 % ---
 explicar_condiciones(Regla, Planeta) :-
     format('  Evaluando regla: ~w~n', [Regla]),
 
-    % 1. Busca la definicion de la regla
+    % Busca el "mapa" de la regla
     (   componentes_regla(Regla, Componentes) ->
 
-        % 2. Itera sobre cada componente de la lista
+        % Si lo encuenta, revisa cada componente de la lista
         forall(member(Componente, Componentes),
-               verificar_componente(Planeta, Componente))
+               verificar_componente(Planeta, Componente)) %llama al verificador (paso 3)
     ;
-        % Caso de seguridad: si una regla no esta definida
+        % Caso de seguridad: si nos olvidamos de definir un "mapa"
         format('  ERROR: No se encontro definicion de explicacion para ~w~n', [Regla])
     ).
 
 
 % ---
-% PASO 4: EL VERIFICADOR DE COMPONENTES
-% Este predicado es llamado por 'forall' para cada item de la lista.
+% Paso 3:
+% forall llama a este predicado para cada item de la lista
 % ---
 
 % Caso 1: El componente es una 'regla(...)'
+% Hay que llamar de nuevo al paso 2 pero con la subregla nueva.
 verificar_componente(Planeta, regla(SubRegla)) :-
     format('  -> Verificando sub-regla: ~w...~n', [SubRegla]),
     explicar_condiciones(SubRegla, Planeta).
 
-% Caso 2: El componente es un 'hecho(...)' (CASO BASE)
+% Caso 2: El componente es un 'hecho(...)'
+% Este es el caso base
 verificar_componente(Planeta, hecho(Hecho)) :-
-    verificar_hecho(Planeta, Hecho).
+    verificar_hecho(Planeta, Hecho).  % Llama al veriricador final (paso 4)
 
 
 % ---
-% PASO 5: EL VERIFICADOR DE HECHOS
-% Este no cambia.
+% Paso 4:
+% Final del camino, solamente se comprueba si el hecho existe en la base de datos
 % ---
 verificar_hecho(Planeta, Hecho) :-
+        %Intenta probar el hecho...
     (   planeta(Planeta, Hecho) ->
+        %Si existe imprime SI.
         format('      [SI] - Tiene ~w~n', [Hecho])
     ;
+        %Si no existe imprime NO.
         format('      [NO] - FALTA ~w~n', [Hecho])
     ).
 

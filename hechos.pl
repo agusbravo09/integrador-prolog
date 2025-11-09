@@ -1,4 +1,3 @@
-% cargar_datos.pl
 :- use_module(library(csv)).
 :- dynamic planeta/2.
 

@@ -2,13 +2,10 @@
 %%%%%%% Archivo de Pruebas de Robustez (con PL-Unit) Generado por GEMINI %%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Nos pareció divertido pedirle a una IA que haga tests y trate de romper el programa jaja
+% Nos pareció interesante pedirle a una IA que haga tests y trate de romper el programa
 
 % --- 1. IMPORTACIONES ---
 % Carga las reglas y consultas que vamos a probar
-:- consult('reglas.pl').
-:- consult('consultas.pl').
-:- consult('cargar_datos.pl'). % Necesario por si 'consultas.pl' lo requiere
 :- use_module(library(plunit)).
 
 % --- 2. DATOS DE PRUEBA CONTROLADOS ---
