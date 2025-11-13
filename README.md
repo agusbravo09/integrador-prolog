@@ -1,4 +1,4 @@
-#🌌 Sistema Experto: Evaluación de Vida Inteligente en Planetas - 2do Cuatrimestre - 2025
+##🌌 Sistema Experto: Evaluación de Vida Inteligente en Planetas - 2do Cuatrimestre - 2025
 *Logica para las Ciencias Informaticas - Lic. en Sistemas*
 
 **Facultad de Ciencias de la Administración**
@@ -24,14 +24,17 @@ Sistema Experto en Prolog que evalúa la existencia de vida en distintos planeta
 - **Analizar variaciones** en los hechos y su impacto en las inferencias finales
 
 ## Estructura del Proyecto
+
+```
 proyecto_prolog/
-├── main.pl # Menú principal y ejecución
-├── hechos.pl # Manejo de datos CSV y hechos
-├── reglas.pl # Reglas lógicas de inferencia
-├── consultas.pl # Menús de consultas y explicaciones
-├── pruebas.pl # Suite de pruebas automatizadas
-├── planetas.csv # Base de datos de planetas y características
-└── README.md # Este archivo
+├── main.pl              # Menú principal y ejecución
+├── hechos.pl           # Manejo de datos CSV y hechos
+├── reglas.pl           # Reglas lógicas de inferencia
+├── consultas.pl        # Menús de consultas y explicaciones
+├── pruebas.pl          # Suite de pruebas automatizadas
+├── planetas.csv        # Base de datos de planetas y características
+└── README.md           # Este archivo
+```
 
 ## Características Implementadas
 
