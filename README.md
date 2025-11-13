@@ -74,10 +74,9 @@ proyecto_prolog/
 ## Instalación y Ejecución
 
 ### Requisitos
-- SWI-Prolog instalado
+- SWI-Prolog y SWI-Prolog-Editor instalado
 - Archivos del proyecto en el mismo directorio
 
 ### Ejecución
 ```prolog
 ?- [main].
-?- iniciar_programa.
