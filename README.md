@@ -1,4 +1,4 @@
-##🌌 Sistema Experto: Evaluación de Vida Inteligente en Planetas - 2do Cuatrimestre - 2025
+## Sistema Experto: Evaluación de Vida Inteligente en Planetas - 2do Cuatrimestre - 2025
 *Logica para las Ciencias Informaticas - Lic. en Sistemas*
 
 **Facultad de Ciencias de la Administración**
