@@ -72,7 +72,7 @@ ejecutar_explicacion(_) :- write('Opcion no valida. Intente de nuevo.'), nl, nl,
 % ---
 % Formato:
 %   hecho(algo) -> Significa que debemos buscar un hecho: planeta(Planeta, algo)
-%   regla(otra_regla) -> Significa que esto depende de OTRA regla (es recursivo)
+%   regla(otra_regla) -> Significa que esto depende de OTRA regla)
 % ---
 
 % Son como "mapas" de las reglas definidas en reglas.pl
@@ -80,12 +80,12 @@ componentes_regla(vida_basica, [hecho(tiene_atmosfera),
                                 hecho(tiene_agua_liquida),
                                 hecho(tiene_elementos_biogenicos)]).
 
-componentes_regla(vida_compleja, [regla(vida_basica),
-                                  hecho(tiene_evolucion_biologica),
-                                  hecho(tiene_superficie_solida)]).
+componentes_regla(vida_compleja, [hecho(tiene_evolucion_biologica),
+                                  hecho(tiene_superficie_solida),
+                                  regla(vida_basica)]).
 
-componentes_regla(vida_inteligente, [regla(vida_compleja),
-                                     hecho(tiene_tecnologia)]).
+componentes_regla(vida_inteligente, [hecho(tiene_tecnologia),
+                                     regla(vida_compleja)]).
 
 componentes_regla(habitable, [hecho(tiene_atmosfera),
                              hecho(tiene_magnetosfera),
@@ -95,9 +95,9 @@ componentes_regla(habitable, [hecho(tiene_atmosfera),
 componentes_regla(fotosintesis_posible, [hecho(tiene_luz_solar),
                                           hecho(tiene_atmosfera)]).
 
-componentes_regla(civilizacion_avanzada, [regla(vida_inteligente),
-                                          regla(habitable),
-                                          hecho(tiene_luz_solar)]).
+componentes_regla(civilizacion_avanzada, [hecho(tiene_luz_solar),
+                                          regla(vida_inteligente),
+                                          regla(habitable)]).
 
 
 % ---
@@ -160,7 +160,7 @@ verificar_componente(Planeta, regla(SubRegla)) :-
 % Caso 2: El componente es un 'hecho(...)'
 % Este es el caso base
 verificar_componente(Planeta, hecho(Hecho)) :-
-    verificar_hecho(Planeta, Hecho).  % Llama al veriricador final (paso 4)
+    verificar_hecho(Planeta, Hecho). % Llama al veriricador final (paso 4)
 
 
 % ---
